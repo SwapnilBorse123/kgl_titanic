@@ -47,24 +47,35 @@ X_test = sc.transform(X_test)
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
+from keras import optimizers
+import matplotlib.pyplot as plt
 
 # Initialising the ANN
 classifier = Sequential()
 
 # Adding the input layer and the first hidden layer with 4 neurons
-classifier.add(Dense(output_dim = 4, init = 'uniform', activation = 'relu', input_dim = 5))
+classifier.add(Dense(output_dim = 4, kernel_initializer='uniform', activation = 'relu', input_dim = 5))
 
 # Adding the second hidden layer with 3 neurons
-classifier.add(Dense(output_dim = 3, init = 'uniform', activation = 'relu'))
+classifier.add(Dense(output_dim = 3, kernel_initializer='uniform', activation = 'relu'))
 
 # Adding the thrid hidden layer with 1 neuron
-classifier.add(Dense(output_dim = 1, init = 'uniform', activation = 'sigmoid'))
+classifier.add(Dense(output_dim = 1, kernel_initializer='uniform', activation = 'sigmoid'))
 
 # Compiling the ANN [using binary since we have two possible prediction values]
-classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+adam = optimizers.Adam(lr = 0.01, beta_1=0.9, beta_2=0.999)
+classifier.compile(optimizer = adam, loss = 'binary_crossentropy', metrics = ['accuracy'])
 
 # Fitting the ANN to the Training set
-classifier.fit(X_train, y_train, batch_size = 20, nb_epoch = 150)
+history = classifier.fit(X_train, y_train, batch_size = 10, nb_epoch = 120)
+
+# summarize history for accuracy
+plt.plot(history.history['acc'])
+plt.plot(history.history['loss'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.show()
 
 # Part 3 - Making the predictions and evaluating the model
 
@@ -73,8 +84,10 @@ y_pred = classifier.predict(X_test)
 y_pred = (y_pred > 0.5)
 
 # Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
 cm = confusion_matrix(y_test, y_pred)
+
+test_accuracy = accuracy_score(y_test, y_pred, normalize = True)
 
 # Part 4 - making predictions on actual data set
 df_test = pd.read_csv(filepath_or_buffer = "/home/imcoolswap/.kaggle/competitions/titanic/test.csv", header = None, skiprows = 1);
@@ -91,3 +104,6 @@ X_test = X_test[:, 1:]
 
 sc_test = StandardScaler()
 X_test = sc_test.fit_transform(X_test)
+
+y_pred = classifier.predict(X_test)
+y_pred = (y_pred > 0.5)
